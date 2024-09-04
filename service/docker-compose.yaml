@@ -1,0 +1,10 @@
+services:
+  api_todo_golang:
+    image: postgres:13.5
+    container_name: api_todo_golang
+    environment:
+      POSTGRES_DB: "api_todo"
+      POSTGRES_USER: "user_todo"
+      POSTGRES_PASSWORD: "1122"
+    ports:
+      - "5432:5432"
