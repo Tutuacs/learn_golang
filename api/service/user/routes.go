@@ -7,6 +7,7 @@ import (
 	"github.com/go-playground/validator"
 	"github.com/gorilla/mux"
 
+	"github.com/Tutuacs/learn_golang/api.git/config"
 	"github.com/Tutuacs/learn_golang/api.git/service/auth"
 	"github.com/Tutuacs/learn_golang/api.git/types"
 	"github.com/Tutuacs/learn_golang/api.git/utils"
@@ -26,6 +27,42 @@ func (h *Handler) RegisterRoutes(router *mux.Router) {
 }
 
 func (h *Handler) handleLogin(w http.ResponseWriter, r *http.Request) {
+	var payload types.LoginDto
+	if err := utils.ParseJSON(r, &payload); err != nil {
+		utils.WriteError(w, http.StatusBadRequest, err)
+		return
+	}
+
+	if err := utils.Validate.Struct(payload); err != nil {
+		error := err.(validator.ValidationErrors)
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invalid payload %v", error))
+		return
+	}
+
+	usr, err := h.store.GetUserByEmail(payload.Email)
+	if err != nil {
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("not found, invalid email or password"))
+		return
+	}
+
+	// TODO: verify pass
+
+	if !auth.ValidPassword(usr.Password, payload.Password) {
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("not found, invalid email or password"))
+		return
+	}
+
+	// TODO: generate token
+	secret := []byte(config.Envs.JWT_SECRET)
+
+	token, err := auth.CreateJWT(secret, usr.ID)
+	if err != nil {
+		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("an unexpected error has ocurred on creating a token: %v", err))
+		return
+	}
+
+	// TODO: if pass ok return token
+	utils.WriteJSON(w, http.StatusOK, map[string]string{"token": token})
 
 }
 

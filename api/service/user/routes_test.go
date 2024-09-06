@@ -13,6 +13,14 @@ import (
 	"github.com/Tutuacs/learn_golang/api.git/types"
 )
 
+const (
+	Reset  = "\033[0m"
+	Red    = "\033[31m"
+	Green  = "\033[32m"
+	Yellow = "\033[33m"
+	Blue   = "\033[34m"
+)
+
 func TestUser(t *testing.T) {
 	userStore := &mockUserStore{}
 	handler := NewHandler(userStore)
@@ -40,7 +48,7 @@ func TestUser(t *testing.T) {
 		router.ServeHTTP(r, req)
 
 		if r.Code != http.StatusBadRequest {
-			t.Errorf("expected status code %d, got %d", http.StatusBadRequest, r.Code)
+			t.Error(string(Red), "expected status code", http.StatusBadRequest, ", got", r.Code, Reset)
 		}
 	})
 
@@ -67,7 +75,7 @@ func TestUser(t *testing.T) {
 		router.ServeHTTP(r, req)
 
 		if r.Code != http.StatusCreated {
-			t.Errorf("expected status code %d, got %d", http.StatusCreated, r.Code)
+			t.Error(string(Red), "expected status code", http.StatusCreated, ", got", r.Code, Reset)
 		}
 	})
 
