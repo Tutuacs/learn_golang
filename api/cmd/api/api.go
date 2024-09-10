@@ -7,6 +7,7 @@ import (
 
 	"github.com/gorilla/mux"
 
+	"github.com/Tutuacs/learn_golang/api.git/service/product"
 	"github.com/Tutuacs/learn_golang/api.git/service/user"
 )
 
@@ -37,6 +38,10 @@ func (s *APIServer) Run() error {
 	userStore := user.NewStore(s.db)
 	userHandler := user.NewHandler(userStore)
 	userHandler.RegisterRoutes(subRouter)
+
+	productStore := product.NewStore(s.db)
+	productHandler := product.NewHandler(productStore)
+	productHandler.RegisterRoutes(subRouter)
 
 	log.Println(string(Green), "Listening on", s.addr, Reset)
 
