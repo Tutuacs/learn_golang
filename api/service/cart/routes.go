@@ -7,24 +7,36 @@ import (
 	"github.com/go-playground/validator"
 	"github.com/gorilla/mux"
 
+	"github.com/Tutuacs/learn_golang/api.git/service/auth"
 	"github.com/Tutuacs/learn_golang/api.git/types"
 	"github.com/Tutuacs/learn_golang/api.git/utils"
 )
 
 type Handler struct {
-	store        types.OrderStore
-	productStore types.ProductStore
+	store      types.ProductStore
+	orderStore types.OrderStore
+	userStore  types.UserStore
 }
 
-func NewHandler(store types.OrderStore, productStore types.ProductStore) *Handler {
-	return &Handler{store: store, productStore: productStore}
+func NewHandler(
+	store types.ProductStore,
+	orderStore types.OrderStore,
+	userStore types.UserStore,
+) *Handler {
+	return &Handler{
+		store:      store,
+		orderStore: orderStore,
+		userStore:  userStore,
+	}
 }
 
 func (h *Handler) RegisterRoutes(router *mux.Router) {
-	router.HandleFunc("/cart/checkout", h.handleCheckout).Methods(http.MethodGet)
+	router.HandleFunc("/cart/checkout", auth.WithJWTAuth(h.handleCheckout, h.userStore)).Methods(http.MethodPost)
 }
 
 func (h *Handler) handleCheckout(w http.ResponseWriter, r *http.Request) {
+	userID := auth.GetUserIDFromContext(r.Context())
+
 	var cart types.CartCheckoutDTO
 	if err := utils.ParseJSON(r, &cart); err != nil {
 		utils.WriteError(w, http.StatusBadRequest, err)
@@ -33,15 +45,31 @@ func (h *Handler) handleCheckout(w http.ResponseWriter, r *http.Request) {
 
 	if err := utils.Validate.Struct(cart); err != nil {
 		errors := err.(validator.ValidationErrors)
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invalid payload %v", errors))
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invalid payload: %v", errors))
 		return
 	}
 
-	productIDs, err := getCartItemsIDs(cart.Items)
+	productIds, err := getCartItemsIDs(cart.Items)
 	if err != nil {
 		utils.WriteError(w, http.StatusBadRequest, err)
 		return
 	}
 
-	products, err := h.productStore.GetProductsByIDs(productIDs)
+	// get products
+	products, err := h.store.GetProductsByIDs(productIds)
+	if err != nil {
+		utils.WriteError(w, http.StatusInternalServerError, err)
+		return
+	}
+
+	orderID, totalPrice, err := h.createOrder(products, cart.Items, userID)
+	if err != nil {
+		utils.WriteError(w, http.StatusBadRequest, err)
+		return
+	}
+
+	utils.WriteJSON(w, http.StatusOK, map[string]interface{}{
+		"total_price": totalPrice,
+		"order_id":    orderID,
+	})
 }

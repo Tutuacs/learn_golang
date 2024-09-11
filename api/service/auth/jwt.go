@@ -1,21 +1,82 @@
 package auth
 
 import (
+	"context"
+	"fmt"
+	"log"
+	"net/http"
 	"strconv"
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
 
 	"github.com/Tutuacs/learn_golang/api.git/config"
+	"github.com/Tutuacs/learn_golang/api.git/types"
+	"github.com/Tutuacs/learn_golang/api.git/utils"
 )
 
-func CreateJWT(secret []byte, userID int) (string, error) {
+const (
+	Reset  = "\033[0m"
+	Red    = "\033[31m"
+	Green  = "\033[32m"
+	Yellow = "\033[33m"
+	Blue   = "\033[34m"
+)
 
+type contextKey string
+
+const UserKey contextKey = "userID"
+
+func WithJWTAuth(handlerFunc http.HandlerFunc, store types.UserStore) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		tokenString := utils.GetTokenFromRequest(r)
+
+		token, err := validateJWT(tokenString)
+		if err != nil {
+			log.Printf(Red+"failed to validate token: %v"+Reset, err)
+			permissionDenied(w)
+			return
+		}
+
+		if !token.Valid {
+			log.Println("invalid token")
+			permissionDenied(w)
+			return
+		}
+
+		claims := token.Claims.(jwt.MapClaims)
+		str := claims["userID"].(string)
+
+		userID, err := strconv.Atoi(str)
+		if err != nil {
+			log.Printf(Red+"failed to convert userID to int: %v"+Reset, err)
+			permissionDenied(w)
+			return
+		}
+
+		u, err := store.GetUserByID(userID)
+		if err != nil {
+			log.Printf(Red+"failed to get user by id: %v"+Reset, err)
+			permissionDenied(w)
+			return
+		}
+
+		// Add the user to the context
+		ctx := r.Context()
+		ctx = context.WithValue(ctx, UserKey, u.ID)
+		r = r.WithContext(ctx)
+
+		// Call the function if the token is valid
+		handlerFunc(w, r)
+	}
+}
+
+func CreateJWT(secret []byte, userID int) (string, error) {
 	expiration := time.Second * time.Duration(config.Envs.JWT_EXP)
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"userID":   strconv.Itoa(userID),
-		"expireAt": time.Now().Add(expiration).Unix(),
+		"userID":    strconv.Itoa(int(userID)),
+		"expiresAt": time.Now().Add(expiration).Unix(),
 	})
 
 	tokenString, err := token.SignedString(secret)
@@ -23,5 +84,28 @@ func CreateJWT(secret []byte, userID int) (string, error) {
 		return "", err
 	}
 
-	return tokenString, nil
+	return tokenString, err
+}
+
+func validateJWT(tokenString string) (*jwt.Token, error) {
+	return jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+		}
+
+		return []byte(config.Envs.JWT_SECRET), nil
+	})
+}
+
+func permissionDenied(w http.ResponseWriter) {
+	utils.WriteError(w, http.StatusForbidden, fmt.Errorf("permission denied"))
+}
+
+func GetUserIDFromContext(ctx context.Context) int {
+	userID, ok := ctx.Value(UserKey).(int)
+	if !ok {
+		return -1
+	}
+
+	return userID
 }
