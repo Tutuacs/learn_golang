@@ -49,9 +49,9 @@ func (h *Handler) handleCreateProduct(w http.ResponseWriter, r *http.Request) {
 	utils.WriteJSON(w, http.StatusOK, map[string]string{"message": "Product successfully"})
 }
 
-func (h *Handler) handleFindProduct(w http.ResponseWriter, r *http.Request) {
+// func (h *Handler) handleFindProduct(w http.ResponseWriter, r *http.Request) {
 
-}
+// }
 
 func (h *Handler) handleListProduct(w http.ResponseWriter, r *http.Request) {
 	products, err := h.store.GetProducts()
@@ -63,10 +63,10 @@ func (h *Handler) handleListProduct(w http.ResponseWriter, r *http.Request) {
 	utils.WriteJSON(w, http.StatusOK, products)
 }
 
-func (h *Handler) handleUpdateProduct(w http.ResponseWriter, r *http.Request) {
+// func (h *Handler) handleUpdateProduct(w http.ResponseWriter, r *http.Request) {
 
-}
+// }
 
-func (h *Handler) handleDeleteProduct(w http.ResponseWriter, r *http.Request) {
+// func (h *Handler) handleDeleteProduct(w http.ResponseWriter, r *http.Request) {
 
-}
+// }
