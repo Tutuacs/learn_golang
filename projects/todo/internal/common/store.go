@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 
-	"github.com/golang-migrate/migrate/database/mysql"
+	"github.com/go-sql-driver/mysql"
 
 	"todo-app/pkg/config"
 	"todo-app/pkg/logs"
@@ -27,11 +27,15 @@ func OpenConnection() (*sql.DB, error) {
 		ParseTime:            true,
 	}
 
-	db, err := sql.Open("mysql", dbConfig.FormatDSN())
+	conn, err := sql.Open("mysql", dbConfig.FormatDSN())
 	if err != nil {
-		logs.ErrorLog(fmt.Sprintf("Error opening B connection: %v", err))
+		logs.ErrorLog(fmt.Sprintf("Error opening DB connection: %v", err))
 	}
 
-	return db, err
+	return conn, err
 
+}
+
+func CloseConnection(conn *sql.DB) {
+	conn.Close()
 }

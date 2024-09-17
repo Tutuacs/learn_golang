@@ -11,13 +11,17 @@ type Store struct {
 	db *sql.DB
 }
 
-func NewStore() (Store, error) {
-	newStore, err := common.OpenConnection()
+func NewStore() (*Store, error) {
+	conn, err := common.OpenConnection()
 
-	return Store{db: newStore}, err
+	return &Store{db: conn}, err
 }
 
-func (s *Store) UserCreate() {
+func (s *Store) CloseStore() {
+	common.CloseConnection(s.db)
+}
 
-	return
+func (s *Store) CreateTodo(todo Todo) error {
+
+	return nil
 }

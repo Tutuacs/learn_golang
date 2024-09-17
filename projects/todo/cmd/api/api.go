@@ -1,26 +1,35 @@
 package api
 
 import (
-	"database/sql"
+	"fmt"
+	"net/http"
 
-	"github.com/gorilla/mux"
+	"todo-app/internal/common"
+	todoInternal "todo-app/internal/todo/handler"
+	userInternal "todo-app/internal/user/handler"
+	"todo-app/pkg/logs"
 )
 
 type APIServer struct {
 	addr string
-	db   *sql.DB
 }
 
-func NewApiServer(addr string, db *sql.DB) *APIServer {
+func NewApiServer(addr string) *APIServer {
 	return &APIServer{
 		addr: addr,
-		db:   db,
 	}
 }
 
-func (srv *APIServer) Start() {
-	router := mux.NewRouter()
+func (srv *APIServer) Start() error {
+	router := common.NewRouter()
 
-	router.PathPrefix("/")
+	todoHandler := todoInternal.NewHandler()
+	todoHandler.StartRoutes(router)
 
+	userHandler := userInternal.NewHandler()
+	userHandler.StartRoutes(router)
+
+	logs.OkLog(fmt.Sprintf("Running server on port %v", srv.addr))
+
+	return http.ListenAndServe(srv.addr, router.GetRouter())
 }

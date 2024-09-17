@@ -1,15 +1,17 @@
 package todo
 
-import "todo-app/internal/todo"
+import (
+	"net/http"
+)
 
-func TesteHandlerTodo() {
+type Handler struct {
+}
 
-	db, err := todo.NewStore()
-	if err != nil {
-		return
-	}
+func NewHandler() *Handler {
+	return &Handler{}
+}
 
-	db.UserCreate()
-
-	return
+func (h *Handler) CreateTodo(w http.ResponseWriter, r *http.Request) {
+	w.Header().Add("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
 }
