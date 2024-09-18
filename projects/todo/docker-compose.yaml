@@ -1,8 +1,8 @@
 services:
   mysql:
     image: mysql:latest
-    container_name: mysql_container
-    # command: --default-authentication-plugin=mysql_native_password
+    container_name: mysql_todo_container
+    # command: --default-authentication-plugin=mysql_native_password  # ! Not suported in this mysql Version
     restart: always
     environment:
       MYSQL_DATABASE: $DB_NAME            # Altere conforme necessário
@@ -16,7 +16,7 @@ services:
 
   phpmyadmin:
     image: phpmyadmin/phpmyadmin
-    container_name: phpmyadmin_container
+    container_name: phpmyadmin_todo_container
     restart: always
     environment:
       PMA_HOST: mysql
