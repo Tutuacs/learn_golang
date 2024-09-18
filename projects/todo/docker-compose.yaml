@@ -1,0 +1,34 @@
+services:
+  mysql:
+    image: mysql:latest
+    container_name: mysql_container
+    # command: --default-authentication-plugin=mysql_native_password
+    restart: always
+    environment:
+      MYSQL_DATABASE: $DB_NAME            # Altere conforme necessário
+      MYSQL_USER: $DB_USER                # Altere conforme necessário
+      MYSQL_PASSWORD: $DB_PASS      # Altere conforme necessário
+      MYSQL_ROOT_PASSWORD: $DB_PASS
+    ports:
+      - "$DB_PORT:$DB_PORT"
+    networks:
+      - mynet
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: phpmyadmin_container
+    restart: always
+    environment:
+      PMA_HOST: mysql
+      PMA_PORT: $DB_PORT
+      MYSQL_ROOT_PASSWORD: $DB_PASS
+    ports:
+      - "8080:80"
+    depends_on:
+      - mysql
+    networks:
+      - mynet
+
+networks:
+  mynet:
+    driver: bridge
