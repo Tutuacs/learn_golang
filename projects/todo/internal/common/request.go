@@ -2,6 +2,7 @@ package common
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 
 	"github.com/go-playground/validator"
@@ -9,6 +10,11 @@ import (
 )
 
 func GetBody(r *http.Request, response interface{}) error {
+
+	if r.Body == nil {
+		return fmt.Errorf("missing request body")
+	}
+
 	decode := json.NewDecoder(r.Body)
 	err := decode.Decode(response)
 	return err

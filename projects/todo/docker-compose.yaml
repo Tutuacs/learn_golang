@@ -2,7 +2,7 @@ services:
   mysql:
     image: mysql:latest
     container_name: mysql_todo_container
-    # command: --default-authentication-plugin=mysql_native_password  # ! Not suported in this mysql Version
+    # command: --default-authentication-plugin=mysql_native_password  # ! Not suported in this latest mysql Version
     restart: always
     environment:
       MYSQL_DATABASE: $DB_NAME            # Altere conforme necessário
@@ -10,7 +10,7 @@ services:
       MYSQL_PASSWORD: $DB_PASS      # Altere conforme necessário
       MYSQL_ROOT_PASSWORD: $DB_PASS
     ports:
-      - "$DB_PORT:$DB_PORT"
+      - "$DB_PORT:3306"
     networks:
       - mynet
 
@@ -20,7 +20,7 @@ services:
     restart: always
     environment:
       PMA_HOST: mysql
-      PMA_PORT: $DB_PORT
+      PMA_PORT: "3306"
       MYSQL_ROOT_PASSWORD: $DB_PASS
     ports:
       - "8080:80"

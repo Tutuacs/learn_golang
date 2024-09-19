@@ -2,27 +2,42 @@ package auth
 
 import (
 	"database/sql"
-	"fmt"
 
 	"todo-app/internal/common"
 )
 
 type Store struct {
 	common.Store
-	Table string
-	db    *sql.DB
+	db *sql.DB
 }
 
 func NewStore() (*Store, error) {
 	conn, err := common.OpenConnection()
-	return &Store{db: conn, Table: "users"}, err
+	return &Store{db: conn}, err
+}
+
+func (s *Store) GetConn() *sql.DB {
+	return s.db
+}
+
+func NewStoreInstace(conn *sql.DB) (*Store, error) {
+	return &Store{db: conn}, nil
+}
+
+func (s *Store) CloseStore() {
+	common.CloseConnection(s.db)
 }
 
 func (s *Store) RegisterUser(new RegisterUserDTO) (resp LoginResponseDTO, err error) {
 
-	sql := fmt.Sprintf("INSERT INTO %s (name, email, password) VALUES (?, ?, ?) RETURNING *", s.Table)
+	sql := "INSERT INTO users (name, email, password) VALUES (?, ?, ?)"
 
-	err = s.db.QueryRow(sql, new.Name, new.Email, new.Password).Scan(&resp.Name, &resp.ID, &resp.Email)
+	result, err := s.db.Exec(sql, new.Name, new.Email, new.Password)
+	if err != nil {
+		return
+	}
+
+	resp.User.ID, err = result.LastInsertId()
 
 	return
 }
