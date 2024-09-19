@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
+	authInternal "todo-app/internal/auth/handler"
 	"todo-app/internal/common"
 	todoInternal "todo-app/internal/todo/handler"
 	userInternal "todo-app/internal/user/handler"
@@ -22,6 +23,9 @@ func NewApiServer(addr string) *APIServer {
 
 func (srv *APIServer) Start() error {
 	router := common.NewRouter()
+
+	authHandler := authInternal.NewHandler()
+	authHandler.StartRoutes(router)
 
 	todoHandler := todoInternal.NewHandler()
 	todoHandler.StartRoutes(router)

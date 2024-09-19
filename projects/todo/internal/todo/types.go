@@ -6,3 +6,9 @@ type Todo struct {
 	Name   string `json:"name"`
 	Done   bool   `json:"done"`
 }
+
+type NewTodoDTO struct {
+	Name   string `json:"name" validate:""`
+	Done   bool   `json:"done" validate:""`
+	UserID int
+}

@@ -4,15 +4,14 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/go-playground/validator"
 	"github.com/gorilla/mux"
-
-	"todo-app/pkg/utils"
 )
 
-func GetBody(r *http.Request, response interface{}) {
+func GetBody(r *http.Request, response interface{}) error {
 	decode := json.NewDecoder(r.Body)
 	err := decode.Decode(response)
-	utils.ErrorPanic(err)
+	return err
 }
 
 func GetParam(r *http.Request, paramName string) (param string) {
@@ -25,3 +24,5 @@ func WriteResponse(w http.ResponseWriter, status int, result interface{}) {
 	encode := json.NewEncoder(w)
 	encode.Encode(result)
 }
+
+var Validate = validator.New()
