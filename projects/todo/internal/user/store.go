@@ -46,7 +46,9 @@ func (s *Store) ListUsers() (users []User, err error) {
 
 	for rows.Next() {
 		user := rowsToUser(rows)
-		users = append(users, user)
+		if user.ID != 0 {
+			users = append(users, user)
+		}
 	}
 
 	return
